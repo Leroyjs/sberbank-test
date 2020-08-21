@@ -7,9 +7,9 @@ import './style.css';
 
 Note.propTypes = {
     item: PropTypes.shape({
-        isDone: PropTypes.bool,
         id: PropTypes.string,
-        body: PropTypes.string,
+        title: PropTypes.string,
+        tasks: PropTypes.array,
     }),
     handleActive: PropTypes.func,
     handleModalDel: PropTypes.func,

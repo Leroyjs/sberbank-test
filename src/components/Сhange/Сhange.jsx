@@ -1,78 +1,62 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import ModalNewTask from '../ModalNewTask';
+import { connect } from 'react-redux';
+import {
+    addTask,
+    delTask,
+    editTask,
+    changeCheckboxTask,
+    saveNote,
+    editTitle,
+} from '../../redux/actions.js';
 
 import PropTypes from 'prop-types';
 
 import './style.css';
 
-export default class Сhange extends Component {
+class Сhange extends Component {
     static propTypes = {
-        taskList: PropTypes.array.isRequired,
-        activeTask: PropTypes.object.isRequired,
-        handleSave: PropTypes.func.isRequired,
+        tasks: PropTypes.array.isRequired,
+        id: PropTypes.string.isRequired,
+        title: PropTypes.string.isRequired,
+        addTask: PropTypes.func.isRequired,
+        saveNote: PropTypes.func.isRequired,
+        editTask: PropTypes.func.isRequired,
+        delTask: PropTypes.func.isRequired,
+        changeCheckboxTask: PropTypes.func.isRequired,
+        editTitle: PropTypes.func.isRequired,
     };
     constructor() {
         super();
         this.state = {
-            title: '',
-            isDone: false,
-            tasks: [],
             modalAdd: false,
         };
     }
-    componentDidMount() {
-        const { activeTask } = this.props;
-        this.setState({
-            id: activeTask.id,
-            title: activeTask.title,
-            isDone: activeTask.isDone,
-            tasks: activeTask.tasks,
-        });
-    }
+
     handleCheckboxChange = (event) => {
+        const { changeCheckboxTask } = this.props;
         const target = event.target;
         const id = target.name;
-        let tasks = this.state.tasks.slice();
-
-        tasks.find((item) => item.id === id).isDone = !tasks.find(
-            (item) => item.id === id
-        ).isDone;
-        this.setState({
-            tasks,
-        });
+        changeCheckboxTask(id);
     };
     handleTitleChange = (event) => {
         const title = event.target.value;
-
-        this.setState({
-            title,
-        });
+        const { editTitle } = this.props;
+        editTitle(title);
+    };
+    handleSave = (newNote) => {
+        const { saveNote } = this.props;
+        saveNote(newNote);
     };
 
     handleAddTask = (newTaskBody) => {
-        let tasks = this.state.tasks.slice();
-
-        const arrayId = tasks.map((item) => +item.id);
-        let id = (Math.max(...arrayId) + 1).toString();
-        if (id === '-Infinity') id = '0';
-        const newTask = {
-            isDone: false,
-            body: newTaskBody,
-            id,
-        };
-        tasks.push(newTask);
-        this.setState({
-            tasks,
-        });
+        const { addTask } = this.props;
+        addTask(newTaskBody);
     };
-    handleChangeTask = (newTaskBody, id) => {
-        let tasks = this.state.tasks.slice();
-        tasks.find((item) => item.id === id).body = newTaskBody;
-
-        this.setState({
-            tasks,
-        });
+    handleEditTask = (newTaskBody, id) => {
+        const { editTask } = this.props;
+        editTask({ newTaskBody, id });
     };
     handleModalAdd = () => {
         const { modalAdd } = this.state;
@@ -93,18 +77,12 @@ export default class Сhange extends Component {
         }
     };
     handleDel = (id) => {
-        let tasks = this.state.tasks.slice();
-        tasks = tasks.filter((item) => {
-            return item !== tasks.find((item) => item.id === id);
-        });
-
-        this.setState({
-            tasks,
-        });
+        const { delTask } = this.props;
+        delTask(id);
     };
     render() {
-        const { title, id, tasks, modalAdd, modalChange } = this.state;
-        const { handleSave } = this.props;
+        const { modalAdd, modalChange } = this.state;
+        const { title, id, tasks } = this.props;
         return (
             <main className="change__wrapper">
                 <div className="change">
@@ -158,14 +136,16 @@ export default class Сhange extends Component {
                         id={modalChange}
                         info="Изменить задачу"
                         handleCancel={this.handleModalChange}
-                        handleOk={this.handleChangeTask}
+                        handleOk={this.handleEditTask}
                     ></ModalNewTask>
                 )}
                 <div className="buttons">
                     <Link to="/">
                         <button
                             className="buttons__accept"
-                            onClick={() => handleSave({ title, tasks, id })}
+                            onClick={() =>
+                                this.handleSave({ title, tasks, id })
+                            }
                         >
                             Сохранить
                         </button>
@@ -178,3 +158,35 @@ export default class Сhange extends Component {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    const { title, id, tasks } = state.activeTask;
+    return {
+        title,
+        id,
+        tasks,
+    };
+};
+const mapDispatchToProps = (dispatch) => {
+    return {
+        addTask: (body) => {
+            dispatch(addTask(body));
+        },
+        saveNote: (body) => {
+            dispatch(saveNote(body));
+        },
+        editTask: (changes) => {
+            dispatch(editTask(changes));
+        },
+        delTask: (id) => {
+            dispatch(delTask(id));
+        },
+        changeCheckboxTask: (id) => {
+            dispatch(changeCheckboxTask(id));
+        },
+        editTitle: (title) => {
+            dispatch(editTitle(title));
+        },
+    };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(Сhange);
